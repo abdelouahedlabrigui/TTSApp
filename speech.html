@@ -1,216 +1,181 @@
-@model ResourcesWebApplication.Models.Plaintext
-<style>
-    tbody {
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-        color: black;
-        text-decoration: solid;
-        font-size: large;
-        background-color: whitesmoke;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Reader</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+            background: #f5f5f5;
+            max-width: 480px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
 
-    thead {
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-        font-style: italic;
-    }
-</style>
+        .header {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 4px solid #d32f2f;
+        }
 
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-family: 'Times New Roman', Times, serif;
+        }
 
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <div class="form-group">
-            <label class="control-label"></label>
-            <input type="text" class="form-control" id="fileInput" autocomplete="off"
-                onchange="loadFileContent()" />
-        </div>
-        <div class="form-group">
-            <label class="control-label"></label>
-            <textarea id="fileContent" cols="30" rows="7" class="form-control-plaintext"></textarea>
-            <input class="form-control-plaintext text-white" value="-" readonly />
-        </div>
-        <div class="form-group">
-            <label class="control-label"></label>
-            <input class="form-control" id="CreatedAT" readonly />
-        </div>
-        <div class="form-group">
-            <input type="submit" value="Create" class="btn btn-primary" />
-        </div>
-        <hr>
-        <div class="card-body container">
-            <div class="shadow-lg lead bg-white">
-                <div class="row">
-                    <div class="col container">
-                        <div class="form-group">
-                            <label for="rate">Rate:</label>
-                            <input class="form-control-plaintext" type="range" id="rate" min="1" max="10" step="1"
-                                value="1">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="volume">Volume:</label>
-                            <input class="form-control-plaintext" type="range" id="volume" min="0" max="1" step="0.01"
-                                value="1">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col container">
-                        <div class="form-group container">
-                            <label for="Language" class="badge badge-danger text-white">Language</label>
-                            <select id="my_language" class="form-control-plaintext bg-dark text-white">
-                                <option value="fr-FR">fr-FR</option>
-                                <option value="en-EN">en-EN</option>
-                                <option value="es-ES">es-ES</option>
-                                <option value="de-DE">de-DE</option>
-                                <option value="pt-BR">pt-PT</option>
-                            </select>
-                        </div>
-                        <div class="form-group container">
-                            <div class="row">
-                                <div class="col">
-                                    <button id="speakButton"
-                                        class="btn btn-dark btn-hover text-white btn-block btn-lg form-control">Speak</button>
-                                </div>
-                                <div class="col form-group">
-                                    <button id="resumeButton"
-                                        class="btn btn-dark text-white btn-block btn-lg form-control">Resume</button>
-                                </div>
-                                <div class="col form-group">
-                                    <button id="pauseButton"
-                                        class="btn btn-dark text-white btn-block btn-lg form-control">Pause</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        .controls {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .content {
+            padding: 1rem;
+            background: white;
+            min-height: 400px;
+        }
+
+        .current-sentence {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #fff;
+            border-left: 4px solid #d32f2f;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.2rem;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #b71c1c;
+        }
+
+        input[type="file"] {
+            margin: 0.5rem 0;
+            display: block;
+        }
+
+        .settings {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>The Daily Reader</h1>
+    </div>
+
+    <div class="controls">
+        <input type="file" id="textFile" accept=".txt">
+        <button onclick="speak()">Speak</button>
+        <button onclick="pause()">Pause</button>
+        <button onclick="resume()">Resume</button>
+        <button onclick="clear()">Clear</button>
+        
+        <div class="settings">
+            <label>Rate: <input type="range" id="rate" min="0.5" max="2" value="1" step="0.1"></label>
+            <label>Volume: <input type="range" id="volume" min="0" max="1" value="1" step="0.1"></label>
         </div>
     </div>
-    <div class="col">
-        <hr style="background-image: linear-gradient(to right, #ff2c96, rgb(192, 55, 123));">
-        <div class="card">
-            <div class="card-header bg-dark">
-                <strong class="form-control-plaintext text-white" id="currentTimeInput"
-                    style="font-size: 120%;"></strong>
-            </div>
-            <div class="card-body bg-dark shadow-sm">
-                <strong
-                    style="text-align: justify; font-size:200%;  font-family: Cascadia Code; background-color: purple; color: white; "
-                    class="" id="sentence" strong>
-            </div>
-        </div>
+
+    <div class="content">
+        <div id="currentSentence" class="current-sentence"></div>
     </div>
-</div>
 
-<script class="text/javascript">
-    function loadFileContent() {
-        var fileInput = document.getElementById('fileInput');
-        var fileContentTextarea = document.getElementById('fileContent');
-
-        if (fileInput.files.length > 0) { // Check if a file is actually selected
-
-            var file = fileInput.files[0]; // Get the selected file
-            var reader = new FileReader(); // Create a FileReader object
-
-            reader.onload = function (event) { // When the file is loaded
-                fileContentTextarea.value = event.target.result; // Set the textarea value to the file content
-            };
-
-            reader.onerror = function (event) { // Handle errors
-                fileContentTextarea.value = "Error reading file.";
-            };
-
-            reader.readAsText(file); // Read the file as plain text
-
-        } else {
-            fileContentTextarea.value = 'No file selected.';
-        }
-    }
-
-    function setCreateAT() {
-        var createdATInput = document.getElementById('CreatedAT');
-        var currentDate = new Date();
-        createdATInput.value = currentDate.toISOString();
-    }
-
-    setCreateAT();
-    function updateCurrentTime() {
-        var currentTimeInput = document.getElementById('currentTimeInput');
-        var currentTime = new Date();
-        var hours = currentTime.getHours();
-        var minutes = currentTime.getMinutes();
-        var seconds = currentTime.getSeconds();
-        var milliseconds = currentTime.getMilliseconds();
-
-        var formattedTime = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}.${padZero(milliseconds, 3)}`;
-        currentTimeInput.innerHTML = formattedTime;
-    }
-    function padZero(number, width = 2) {
-        var str = number.toString();
-        while (str.length < width) {
-            str = '0' + str;
-        }
-        return str;
-    }
-    setInterval(updateCurrentTime, 100);
-    updateCurrentTime();
-
-    const textInput = document.getElementById('fileContent');
-    const speakButton = document.getElementById('speakButton');
-    const rateInput = document.getElementById('rate');
-    const volumeInput = document.getElementById('volume');
-    const paragraph = document.getElementById('sentence');
-    const synth = window.speechSynthesis;
-
-    function speakText(text) {
-        const sentences = text.split('.');
-        const lang = document.getElementById("my_language").value;
-        const rate = parseFloat(rateInput.value);
-        const volume = parseFloat(volumeInput.value);
-        // const paragraph = document.getElementById('paragraph'); // Assuming you have a paragraph element with id 'paragraph'
-
+    <script>
+        let sentences = [];
         let currentIndex = 0;
+        let utterance = null;
+        let isPaused = false;
 
-        function speakNextSentence() {
+        document.getElementById('textFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                    currentIndex = 0;
+                    displaySentence();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function displaySentence() {
+            const sentenceDiv = document.getElementById('currentSentence');
             if (currentIndex < sentences.length) {
-                const sentence = sentences[currentIndex].trim();
-                if (sentence && sentence.length > 25) {
-                    const utterance = new SpeechSynthesisUtterance(sentence);
-                    utterance.rate = rate;
-                    utterance.volume = volume;
-                    utterance.lang = lang;
-                    paragraph.innerHTML = sentence + '.';
-
-                    // Speak the sentence
-                    synth.speak(utterance);
-
-                    // Move to the next sentence after it's spoken
-                    utterance.onend = () => {
-                        currentIndex++;
-                        speakNextSentence(); // Call the next sentence
-                    };
-                } else {
-                    currentIndex++; // Skip empty sentences
-                    speakNextSentence(); // Call the next sentence
-                }
+                sentenceDiv.textContent = sentences[currentIndex].trim();
+            } else {
+                sentenceDiv.textContent = 'End of article';
             }
         }
 
-        speakNextSentence(); // Start speaking the first sentence
-    }
-    speakButton.addEventListener('click', () => {
-        const textToSpeak = textInput.value.trim() || '';
-        if (textToSpeak) {
-            speakText(textToSpeak);
+        function speak() {
+            if (sentences.length === 0) return;
+
+            if (utterance && isPaused) {
+                resume();
+                return;
+            }
+
+            const rate = document.getElementById('rate').value;
+            const volume = document.getElementById('volume').value;
+
+            utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
+            utterance.rate = parseFloat(rate);
+            utterance.volume = parseFloat(volume);
+            
+            utterance.onend = function() {
+                currentIndex++;
+                if (currentIndex < sentences.length) {
+                    displaySentence();
+                    speak();
+                } else {
+                    displaySentence();
+                }
+            };
+
+            window.speechSynthesis.speak(utterance);
+            isPaused = false;
         }
-    });
-    pauseButton.addEventListener('click', () => {
-        synth.pause();
-    });
 
-    resumeButton.addEventListener('click', () => {
-        synth.resume();
-    });
+        function pause() {
+            if (utterance && !isPaused) {
+                window.speechSynthesis.pause();
+                isPaused = true;
+            }
+        }
 
-</script>
+        function resume() {
+            if (utterance && isPaused) {
+                window.speechSynthesis.resume();
+                isPaused = false;
+            }
+        }
+
+        function clear() {
+            window.speechSynthesis.cancel();
+            sentences = [];
+            currentIndex = 0;
+            isPaused = false;
+            utterance = null;
+            document.getElementById('currentSentence').textContent = '';
+            document.getElementById('textFile').value = '';
+        }
+    </script>
+</body>
+</html>
