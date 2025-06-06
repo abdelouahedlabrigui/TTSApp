@@ -22,13 +22,10 @@ This project fetches the latest news articles based on user-provided queries usi
 
 ```
 project/
-├── app.py                  # Flask backend with `/api/write_news_to_file` endpoint
-├── news.py                 # Contains the `News` class to fetch news articles
-├── templates/
-│   └── index.html          # Web UI with speech synthesis features
-├── static/
-│   └── js/
-│       └── speak.js        # JavaScript code for text-to-speech
+├── index.html              # Web UI with speech synthesis features
+├── app.py                 #  Flask backend with `/api/write_news_to_file` endpoint
+├── Repo/
+│   └── News.py             # Contains the `News` class to fetch news articles
 └── README.md               # Project documentation (this file)
 ```
 
