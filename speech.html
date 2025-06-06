@@ -1,0 +1,216 @@
+@model ResourcesWebApplication.Models.Plaintext
+<style>
+    tbody {
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        color: black;
+        text-decoration: solid;
+        font-size: large;
+        background-color: whitesmoke;
+    }
+
+    thead {
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        font-style: italic;
+    }
+</style>
+
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="control-label"></label>
+            <input type="text" class="form-control" id="fileInput" autocomplete="off"
+                onchange="loadFileContent()" />
+        </div>
+        <div class="form-group">
+            <label class="control-label"></label>
+            <textarea id="fileContent" cols="30" rows="7" class="form-control-plaintext"></textarea>
+            <input class="form-control-plaintext text-white" value="-" readonly />
+        </div>
+        <div class="form-group">
+            <label class="control-label"></label>
+            <input class="form-control" id="CreatedAT" readonly />
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Create" class="btn btn-primary" />
+        </div>
+        <hr>
+        <div class="card-body container">
+            <div class="shadow-lg lead bg-white">
+                <div class="row">
+                    <div class="col container">
+                        <div class="form-group">
+                            <label for="rate">Rate:</label>
+                            <input class="form-control-plaintext" type="range" id="rate" min="1" max="10" step="1"
+                                value="1">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="volume">Volume:</label>
+                            <input class="form-control-plaintext" type="range" id="volume" min="0" max="1" step="0.01"
+                                value="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col container">
+                        <div class="form-group container">
+                            <label for="Language" class="badge badge-danger text-white">Language</label>
+                            <select id="my_language" class="form-control-plaintext bg-dark text-white">
+                                <option value="fr-FR">fr-FR</option>
+                                <option value="en-EN">en-EN</option>
+                                <option value="es-ES">es-ES</option>
+                                <option value="de-DE">de-DE</option>
+                                <option value="pt-BR">pt-PT</option>
+                            </select>
+                        </div>
+                        <div class="form-group container">
+                            <div class="row">
+                                <div class="col">
+                                    <button id="speakButton"
+                                        class="btn btn-dark btn-hover text-white btn-block btn-lg form-control">Speak</button>
+                                </div>
+                                <div class="col form-group">
+                                    <button id="resumeButton"
+                                        class="btn btn-dark text-white btn-block btn-lg form-control">Resume</button>
+                                </div>
+                                <div class="col form-group">
+                                    <button id="pauseButton"
+                                        class="btn btn-dark text-white btn-block btn-lg form-control">Pause</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <hr style="background-image: linear-gradient(to right, #ff2c96, rgb(192, 55, 123));">
+        <div class="card">
+            <div class="card-header bg-dark">
+                <strong class="form-control-plaintext text-white" id="currentTimeInput"
+                    style="font-size: 120%;"></strong>
+            </div>
+            <div class="card-body bg-dark shadow-sm">
+                <strong
+                    style="text-align: justify; font-size:200%;  font-family: Cascadia Code; background-color: purple; color: white; "
+                    class="" id="sentence" strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="text/javascript">
+    function loadFileContent() {
+        var fileInput = document.getElementById('fileInput');
+        var fileContentTextarea = document.getElementById('fileContent');
+
+        if (fileInput.files.length > 0) { // Check if a file is actually selected
+
+            var file = fileInput.files[0]; // Get the selected file
+            var reader = new FileReader(); // Create a FileReader object
+
+            reader.onload = function (event) { // When the file is loaded
+                fileContentTextarea.value = event.target.result; // Set the textarea value to the file content
+            };
+
+            reader.onerror = function (event) { // Handle errors
+                fileContentTextarea.value = "Error reading file.";
+            };
+
+            reader.readAsText(file); // Read the file as plain text
+
+        } else {
+            fileContentTextarea.value = 'No file selected.';
+        }
+    }
+
+    function setCreateAT() {
+        var createdATInput = document.getElementById('CreatedAT');
+        var currentDate = new Date();
+        createdATInput.value = currentDate.toISOString();
+    }
+
+    setCreateAT();
+    function updateCurrentTime() {
+        var currentTimeInput = document.getElementById('currentTimeInput');
+        var currentTime = new Date();
+        var hours = currentTime.getHours();
+        var minutes = currentTime.getMinutes();
+        var seconds = currentTime.getSeconds();
+        var milliseconds = currentTime.getMilliseconds();
+
+        var formattedTime = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}.${padZero(milliseconds, 3)}`;
+        currentTimeInput.innerHTML = formattedTime;
+    }
+    function padZero(number, width = 2) {
+        var str = number.toString();
+        while (str.length < width) {
+            str = '0' + str;
+        }
+        return str;
+    }
+    setInterval(updateCurrentTime, 100);
+    updateCurrentTime();
+
+    const textInput = document.getElementById('fileContent');
+    const speakButton = document.getElementById('speakButton');
+    const rateInput = document.getElementById('rate');
+    const volumeInput = document.getElementById('volume');
+    const paragraph = document.getElementById('sentence');
+    const synth = window.speechSynthesis;
+
+    function speakText(text) {
+        const sentences = text.split('.');
+        const lang = document.getElementById("my_language").value;
+        const rate = parseFloat(rateInput.value);
+        const volume = parseFloat(volumeInput.value);
+        // const paragraph = document.getElementById('paragraph'); // Assuming you have a paragraph element with id 'paragraph'
+
+        let currentIndex = 0;
+
+        function speakNextSentence() {
+            if (currentIndex < sentences.length) {
+                const sentence = sentences[currentIndex].trim();
+                if (sentence && sentence.length > 25) {
+                    const utterance = new SpeechSynthesisUtterance(sentence);
+                    utterance.rate = rate;
+                    utterance.volume = volume;
+                    utterance.lang = lang;
+                    paragraph.innerHTML = sentence + '.';
+
+                    // Speak the sentence
+                    synth.speak(utterance);
+
+                    // Move to the next sentence after it's spoken
+                    utterance.onend = () => {
+                        currentIndex++;
+                        speakNextSentence(); // Call the next sentence
+                    };
+                } else {
+                    currentIndex++; // Skip empty sentences
+                    speakNextSentence(); // Call the next sentence
+                }
+            }
+        }
+
+        speakNextSentence(); // Start speaking the first sentence
+    }
+    speakButton.addEventListener('click', () => {
+        const textToSpeak = textInput.value.trim() || '';
+        if (textToSpeak) {
+            speakText(textToSpeak);
+        }
+    });
+    pauseButton.addEventListener('click', () => {
+        synth.pause();
+    });
+
+    resumeButton.addEventListener('click', () => {
+        synth.resume();
+    });
+
+</script>
